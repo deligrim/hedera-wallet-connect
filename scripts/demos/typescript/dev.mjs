@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /*
  *
  * Hedera Wallet Connect
@@ -18,37 +19,62 @@
  *
  */
 
-import * as esbuild from 'esbuild'
-import { config } from './build.mjs'
+import { createServer } from 'vite';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const devConfig = {
-  ...config,
-  define: {
-    'process.env.dappUrl': '"http://localhost:8080/dapp/index.html"',
-    'process.env.walletUrl': '"http://localhost:8081/wallet/index.html"',
-  },
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const BASE_DEMOS = path.resolve(__dirname, '../../../demos/typescript');
+
+async function startServer(config) {
+  const server = await createServer(config);
+  await server.listen();
+  return server;
 }
 
-let ctx8080 = await esbuild.context(devConfig)
-let ctx8081 = await esbuild.context(devConfig)
 
-/*
- * watches for file changes and serves most recent files
- */
 async function main() {
-  const server1 = await ctx8080.serve({
-    servedir: 'dist/demos/typescript',
-    host: 'localhost',
-    port: 8080,
-  })
-  const server2 = await ctx8081.serve({
-    servedir: 'dist/demos/typescript',
-    host: 'localhost',
-    port: 8081,
-  })
+  try {
+    const dappConfig = {
+      root: BASE_DEMOS,
+      server: {
+        port: 8080,
+        host: 'localhost',
+      },
+      define: {
+        'process.env.dappUrl': JSON.stringify('http://localhost:8080/dapp/index.html'),
+      },
+    };
 
-  console.log(`Server 1 is up ${server1.host}:${server1.port}`)
-  console.log(`Server 2 is up ${server2.host}:${server2.port}`)
+    const walletConfig = {
+      root: BASE_DEMOS,
+      server: {
+        port: 8081,
+        host: 'localhost',
+      },
+      define: {
+        'process.env.walletUrl': JSON.stringify('http://localhost:8081/wallet/index.html'),
+      },
+    };
+
+    console.log('Starting dev servers...');
+    const [dappServer, walletServer] = await Promise.all([
+      startServer(dappConfig),
+      startServer(walletConfig),
+    ]);
+
+    console.log(
+      `DApp server running at http://${dappServer.config.server.host}:${dappServer.config.server.port}/dapp/index.html`
+    );
+    console.log(
+      `Wallet server running at http://${walletServer.config.server.host}:${walletServer.config.server.port}/wallet/index.html`
+    );
+  } catch (error) {
+    console.error('Dev server failed to start:', error);
+    process.exit(1);
+  }
 }
 
-await main()
+main();

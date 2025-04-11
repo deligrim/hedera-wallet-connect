@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wallet</title>
-    <link rel="stylesheet" href="/main.css" />
+    <link rel="stylesheet" href="../main.css" />
   </head>
   <body>
     <main>
@@ -109,13 +109,7 @@
           </form>
         </section>
       </div>
-      <script>
-        const scriptPath = new URL('main.js', window.location.href).pathname
-        const script = document.createElement('script')
-        script.src = scriptPath
-        script.defer = true
-        document.body.appendChild(script)
-      </script>
+      <script type="module" defer src="main.ts"></script>
     </main>
   </body>
 </html>
