@@ -18,30 +18,37 @@
  *
  */
 
-import * as esbuild from 'esbuild'
-import { config } from './build.mjs'
+import { createServer } from 'vite';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import react from '@vitejs/plugin-react'
 
-const devConfig = {
-  ...config,
-  define: {
-    'process.env.dappUrl': '"http://localhost:8080/dapp/index.html"',
-    'process.env.walletUrl': '"http://localhost:8081/wallet/index.html"',
-  },
-}
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-let ctx8080 = await esbuild.context(devConfig)
+const BASE_DEMOS = path.resolve(__dirname, '../../../demos/react-dapp');
 
-/*
- * watches for file changes and serves most recent files
- */
 async function main() {
-  const server1 = await ctx8080.serve({
-    servedir: 'dist/demos/react-dapp',
-    host: 'localhost',
-    port: 3000,
-  })
+  try {
+    const config = {
+      root: BASE_DEMOS,
+      plugins: [react()],
+      server: {
+        port: 3000,
+        host: 'localhost',
+      },
+    };
 
-  console.log(`Server running ${server1.host}:${server1.port}`)
+    const server = await createServer(config);
+    await server.listen();
+
+    console.log(
+      `Dev server running at http://${server.config.server.host}:${server.config.server.port}`
+    );
+  } catch (error) {
+    console.error('Dev server failed to start:', error);
+    process.exit(1);
+  }
 }
 
-await main()
+main();

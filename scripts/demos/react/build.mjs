@@ -18,33 +18,27 @@
  *
  */
 
-import * as esbuild from 'esbuild'
-import copy from 'esbuild-plugin-copy'
+import { build } from 'vite';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import react from '@vitejs/plugin-react'
 
-export const config = {
-  bundle: true,
-  minify: false,
-  platform: 'browser',
-  // format: 'esm',
-  alias: {
-    '@hashgraph/sdk': './node_modules/@hashgraph/sdk/src/index.js',
-    '@hashgraph/proto': './node_modules/@hashgraph/proto',
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const BASE_DEMOS = path.resolve(__dirname, '../../../demos/react-dapp');
+const DIST = path.resolve(__dirname, '../../../dist/demos/react-dapp');
+
+const config = {
+  root: BASE_DEMOS,
+  plugins: [react()],
+  build: {
+    minify: true,
+    emptyOutDir: true,
+    outDir: DIST,
   },
-  plugins: [
-    copy({
-      assets: {
-        from: ['demos/react-dapp/**/*.(html|css|ico|jpg|png)'],
-        to: ['./'],
-      },
-      watch: true, // for ../dev.mjs
-    }),
-  ],
-  outdir: 'dist/demos/react-dapp',
-  entryPoints: [
-    'demos/react-dapp/main.tsx',
-  ],
-  define: {},
-  loader: { '.tsx': 'tsx', '.ts': 'ts' },
-}
+};
 
-esbuild.build(config)
+console.log('Starting distribution build...');
+await build(config);
+console.log('Distribution build completed.');

@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /*
  *
  * Hedera Wallet Connect
@@ -18,75 +19,75 @@
  *
  */
 
-import * as esbuild from 'esbuild'
-import copy from 'esbuild-plugin-copy'
+import { build } from 'vite';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const DOCUSAURUS_STATIC = 'docs/static/demos/typescript'
-const DIST = 'dist/demos/typescript'
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Create separate configs for dist and docusaurus builds
+const BASE_DEMOS = path.resolve(__dirname, '../../../demos/typescript');
+const DIST = path.resolve(__dirname, '../../../dist/demos/typescript');
+const DOCUSAURUS_STATIC = path.resolve(__dirname, '../../../docs/static/demos/typescript');
+
+// Base configuration applied to both builds.
 const baseConfig = {
-  bundle: true,
-  minify: false,
-  platform: 'browser',
-  alias: {
-    '@hashgraph/sdk': './node_modules/@hashgraph/sdk/src/index.js',
-    '@hashgraph/proto': './node_modules/@hashgraph/proto',
-  },
-  entryPoints: [
-    'demos/typescript/main.ts',
-    'demos/typescript/dapp/main.ts', 
-    'demos/typescript/wallet/main.ts',
-  ],
-}
-
-// Config for dist build
-const distConfig = {
-  ...baseConfig,
-  outdir: DIST,
-  plugins: [
-    copy({
-      assets: {
-        from: ['demos/typescript/**/*.(html|css|ico|jpg|png)'],
-        to: ['.'],
+  root: BASE_DEMOS,
+  build: {
+    minify: true,
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: path.resolve(BASE_DEMOS, 'index.html'),
+        dapp: path.resolve(BASE_DEMOS, 'dapp/index.html'),
+        wallet: path.resolve(BASE_DEMOS, 'wallet/index.html'),
       },
-      watch: true,
-    }),
-  ],
-  define: {
-    'process.env.dappUrl': '"https://wc.hgraph.app/dapp/index.html"',
-    'process.env.walletUrl': '"https://wallet.wc.hgraph.app/wallet/index.html"',
+    },
   },
+};
+
+async function buildDist() {
+  console.log('Starting distribution build...');
+  const config = {
+    ...baseConfig,
+    define: {
+      'process.env.dappUrl': JSON.stringify('https://wc.hgraph.app/dapp/index.html'),
+      'process.env.walletUrl': JSON.stringify('https://wallet.wc.hgraph.app/wallet/index.html'),
+    },
+    build: {
+      ...baseConfig.build,
+      outDir: DIST,
+    },
+  };
+  await build(config);
+  console.log('Distribution build completed.');
 }
 
-// Config for docusaurus build
-const docusaurusConfig = {
-  ...baseConfig,
-  outdir: DOCUSAURUS_STATIC,
-  plugins: [
-    copy({
-      assets: [
-        {
-          from: ['demos/typescript/main.css'],
-          to: ['../..']
-        },
-        {
-          from: ['demos/typescript/**/*.(html|ico|jpg|png)'],
-          to: ['.'],
-          flatten: false
-        }
-      ],
-      watch: true,
-    }),
-  ],
-  define: {
-    'process.env.dappUrl': '"/demos/typescript/dapp/index.html"',
-    'process.env.walletUrl': '"/demos/typescript/wallet/index.html"',
-  },
+async function buildDocusaurus() {
+  console.log('Starting Docusaurus build...');
+  const config = {
+    ...baseConfig,
+    define: {
+      'process.env.dappUrl': JSON.stringify('/demos/typescript/dapp/index.html'),
+      'process.env.walletUrl': JSON.stringify('/demos/typescript/wallet/index.html'),
+    },
+    build: {
+      ...baseConfig.build,
+      outDir: DOCUSAURUS_STATIC,
+    },
+  };
+  await build(config);
+  console.log('Docusaurus build completed.');
 }
 
-// Build for dist
-await esbuild.build(distConfig)
+async function main() {
+  try {
+    await buildDist();
+    await buildDocusaurus();
+  } catch (error) {
+    console.error('Build failed:', error);
+    process.exit(1);
+  }
+}
 
-// Build for Docusaurus
-await esbuild.build(docusaurusConfig)
+main();
