@@ -191,7 +191,7 @@ const App: React.FC = () => {
       .setTransactionId(TransactionId.generate(signerAccount))
       .addHbarTransfer(signerAccount, hbarAmount.negated())
       .addHbarTransfer(receiver, hbarAmount)
-      .freezeWith(client)
+      // .freezeWith(client)
 
     const signedTransaction = await transaction.signWithOperator(client)
     const transactionList = transactionToBase64String(signedTransaction)
@@ -297,9 +297,9 @@ const App: React.FC = () => {
     const transaction = new TransferTransaction()
       .setTransactionId(TransactionId.generate(accountId!))
       .addHbarTransfer(accountId.toString()!, hbarAmount.negated())
-      .addHbarTransfer(receiver, hbarAmount)
+      .addHbarTransfer(receiver, hbarAmount);
 
-    const transactionSigned = await selectedSigner!.signTransaction(transaction)
+    const transactionSigned = await selectedSigner!.signTransaction(await transaction.signWithSigner(selectedSigner))
 
     console.log('Signed transaction: ', transactionSigned)
     return { transaction: transactionSigned }
@@ -424,7 +424,7 @@ const App: React.FC = () => {
         .setSupplyType(TokenSupplyType.Finite)
         .setTokenType(TokenType.NonFungibleUnique)
         .setDecimals(0)
-        .freezeWithSigner(selectedSigner)
+        // .freezeWithSigner(selectedSigner)
 
       const base64Transaction = transactionToBase64String(transaction)
       const params: SignAndExecuteTransactionParams = {
@@ -460,7 +460,7 @@ const App: React.FC = () => {
       const transaction = await new TokenMintTransaction()
         .setTokenId(tokenId)
         .setMetadata([Buffer.from(tokenMetadata)])
-        .freezeWithSigner(selectedSigner)
+        // .freezeWithSigner(selectedSigner)
 
       const base64Transaction = transactionToBase64String(transaction)
       const params: SignAndExecuteTransactionParams = {
@@ -489,7 +489,7 @@ const App: React.FC = () => {
       const transaction = await new TokenUpdateTransaction()
         .setTokenId(tokenId)
         .setMetadata(Buffer.from(newMetadata))
-        .freezeWithSigner(selectedSigner)
+        // .freezeWithSigner(selectedSigner)
 
       const base64Transaction = transactionToBase64String(transaction)
       const params: SignAndExecuteTransactionParams = {
@@ -525,8 +525,8 @@ const App: React.FC = () => {
       .setInitialBalance(new Hbar(0))
       .setAccountMemo('Multisig Account')
 
-    const frozen = await transaction.freezeWithSigner(selectedSigner!)
-    const result = await frozen.executeWithSigner(selectedSigner!)
+    // const frozen = await transaction.freezeWithSigner(selectedSigner!)
+    const result = await transaction.executeWithSigner(selectedSigner!)
     console.log('Result: transaction completed', result)
     const receipt = await result.getReceiptWithSigner(selectedSigner!)
     console.log('Receipt: ', receipt)

@@ -347,7 +347,7 @@ async function signer_signAndExecuteTransaction(_: Event) {
     .addHbarTransfer(getState('sign-send-to'), new Hbar(+getState('sign-send-amount')))
 
   const signer = dAppConnector!.signers[0]
-  await transaction.freezeWithSigner(signer)
+  // await transaction.freezeWithSigner(signer)
   return await transaction.executeWithSigner(signer)
 }
 document.getElementById('signer_signAndExecuteTransaction')!.onsubmit = (e: SubmitEvent) =>
@@ -359,7 +359,7 @@ async function signer_signTransaction(_: Event) {
     .addHbarTransfer(getState('sign-send-to'), new Hbar(+getState('sign-send-amount')))
 
   const signer = dAppConnector!.signers[0]
-  await transaction.freezeWithSigner(signer)
+  // await transaction.freezeWithSigner(signer)
   return await signer.signTransaction(transaction)
 }
 document.getElementById('signer_signTransaction')!.onsubmit = (e: SubmitEvent) =>
